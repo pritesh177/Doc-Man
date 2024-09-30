@@ -74,6 +74,8 @@ const FileUpload: React.FC = () => {
         body: formData,
       });
 
+      console.log("Response from server:", res);
+
       if (res.ok) {
         const result = await res.json();
         // setMsg("File Upload Successfully");

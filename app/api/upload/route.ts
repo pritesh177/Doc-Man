@@ -1,51 +1,38 @@
-// import { NextResponse } from 'next/server';
-
-// export async function POST(request: Request) {
-//   const formData = await request.formData();
-//   const file = formData.get('file');
-
-//   // Implement file handling logic here (e.g., save to storage)
-
-//   if (file) {
-//     console.log("file uploaded")
-//     return NextResponse.json({ message: 'File uploaded successfully!' }, { status: 200 });
-//   } else {
-//     console.log("file uploaded failed")
-//     return NextResponse.json({ message: 'File upload failed.' }, { status: 400 });
-//   }
-// }
-
-import { NextResponse } from 'next/server';
+// app/api/upload.ts
+import { NextRequest,NextResponse} from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import client from '../../../db';
 
-export async function POST(request: Request) {
-  const formData = await request.formData();
-  const file = formData.get('file');
+export async function POST(request:NextRequest){
+  try{
+  const formData=await request.formData();
+  const file= formData.get('file');
+    
 
-  // Check if the file is valid
-  if (file && file instanceof Blob) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    // Define the directory to store uploaded files
-    const uploadsDir = path.join(process.cwd(), 'uploads');
-
-    // Create the uploads directory if it doesn't exist
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    // Create a unique filename
-    const filename = `${Date.now()}-${file.name}`;
-    const filePath = path.join(uploadsDir, filename);
-
-    // Write the file to the filesystem
-    fs.writeFileSync(filePath, buffer);
-
-    console.log("File uploaded:", filename);
-    return NextResponse.json({ message: 'File uploaded successfully!', filename }, { status: 200 });
-  } else {
-    console.log("File upload failed");
-    return NextResponse.json({ message: 'File upload failed.' }, { status: 400 });
+  if (!file || !(file instanceof File)) {
+    return NextResponse.json({ success: false, error: 'No valid file uploaded' }, { status: 400 });
   }
+
+  const uploadPath = path.join(process.cwd(), 'uploads');
+  fs.mkdirSync(uploadPath, { recursive: true });
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const filePath = path.join(uploadPath, file.name);
+
+  fs.writeFileSync(filePath, buffer);
+
+  // Store file info in PostgreSQL
+  await client.query(
+    'INSERT INTO documents (title, description, file_path) VALUES ($1, $2, $3)',
+    [file.name, 'Your description here', `uploads/${file.name}`]
+  );
+
+  return NextResponse.json({ success: true, file: { name: file.name } }, { status: 201 });
+}catch (error) {
+  console.error("Error handling file upload:", error); // Log the error
+  return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
 }
+
+}
+
