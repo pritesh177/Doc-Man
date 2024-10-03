@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Formik, Form, ErrorMessage } from "formik";
 import * as yup from "yup";
+//  Uploadcare External API
+import { FileUploaderMinimal, UploadcareFile } from "@uploadcare/react-uploader";
+import "@uploadcare/react-uploader/core.css";
 
 const FileUpload: React.FC = () => {
   //const [file, setFile] = useState<File | null>(null);
@@ -19,33 +22,43 @@ const FileUpload: React.FC = () => {
       .mixed()
       .required("File is Required")
       .test(
-        "fileSize",
-        "The size of file should be less than equal to 5MB",
-        (value) => {
-          if (value && value instanceof File) {
-            const fileSize = value.size;
-            return fileSize <= 5 * 1024 * 1024;
-          }
-          return false;
-        }).test("fileType", "Only PDF files are allowed", (value) => {
-          // Check if the value is a File and has a type property
-          return value && value instanceof File && value.type === "application/pdf"; // Ensure it's a PDF
-        }),
+        'fileSize',
+        'The file size should be less than 5MB',
+        (value) => value && value instanceof File && value.size <= 5 * 1024 * 1024 // 5MB size limit
+      )
+      .test(
+        'fileType',
+        'Only PDF files are allowed',
+        (value) => value && value instanceof File && value.type === 'application/pdf' // Only allow PDFs
+      ),
   });
+
+  // This is logic for formik and Yup to validate input file and ensure it is pdf
+  //       (value) => {
+  //         if (value && value instanceof File) {
+  //           const fileSize = value.size;
+  //           return fileSize <= 5 * 1024 * 1024;
+  //         }
+  //         return false;
+  //       }).test("fileType", "Only PDF files are allowed", (value) => {
+  //         // Check if the value is a File and has a type property
+  //         return value && value instanceof File && value.type === "application/pdf"; // Ensure it's a PDF
+  //       }),
+  // });
 
   // const handleFileEvent = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   handleFile(e);
   //   handlePreview(e);
   // };
 
-  const handleFilePreview = (file: File) => {
-    if (file && file.type === "application/pdf") {
-      const fileURL = URL.createObjectURL(file);
-      setPreview(fileURL);
-    } else {
-      setPreview(null);
-    }
-  };
+  // const handleFilePreview = (file: File) => {
+  //   if (file && file.type === "application/pdf") {
+  //     const fileURL = URL.createObjectURL(file);
+  //     setPreview(fileURL);
+  //   } else {
+  //     setPreview(null);
+  //   }
+  // };
 
   // const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   const selectedFile = e.target.files && e.target.files[0];
@@ -64,33 +77,37 @@ const FileUpload: React.FC = () => {
   ) => {
     setIsLoading(true);
     setSubmitting(true);
+    // this the form data that takes input in form of forms
+    // const formData = new FormData();
+    // formData.append("file", values.file!);
+      // const res = await fetch("/api/uploadcare", {
+      //   method: "POST",
+      //   // API for uploading files on uplaodcare
+      //   body: JSON.stringify({
+      //     file: values.file
+      //   }),
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
-    const formData = new FormData();
-    formData.append("file", values.file!);
+      // console.log("Response from server:", res);
 
-    try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      console.log("Response from server:", res);
-
-      if (res.ok) {
-        const result = await res.json();
-        // setMsg("File Upload Successfully");
-        console.log("Uploaded File:", result.file);
-        
-        router.push("/documents");
-      } else {
-        console.error("File Upload Failed");
-      }
-    } catch (error) {
-      console.error("while file uploading error occurred...!" + error);
-    } finally {
-      setSubmitting(false);
+      // if (res.ok) {
+      //   const result = await res.json();
+      //   // setMsg("File Upload Successfully");
+      //   console.log("Uploaded File:", result.file);
+      //   setPreview(result.file.cdnUrl);
+       router.push("/documents");
+        console.log("I Directed the page");
+    //   } else {
+    //     console.error("File Upload Failed");
+    //   }
+    // } catch (error) {
+    //   console.error("while file uploading error occurred...!" + error);
+    // } finally {
+       setSubmitting(false);
       setIsLoading(false);
-    }
   };
 
   return (
@@ -114,27 +131,21 @@ const FileUpload: React.FC = () => {
       >
         {({ setFieldValue, isSubmitting }) => (
           <Form>
-            <input
-              type="file"
-              accept="application/pdf"
-              className=" px-4 h-10 cursor-pointer border border-gray-300 shadow-sm mr-4 transition-colors duration-200"
-              onChange={(e) => {
-                const selectedFile = e.currentTarget.files?.[0];
+            <FileUploaderMinimal
+              onChange={(files:{ allEntries: UploadcareFile[] }) => {
+                const selectedFile = files.allEntries.find((f) => f.status === "success"); // Change as necessary
                 if (selectedFile) {
-                  setFieldValue("file", selectedFile); // Set as an array
-                  handleFilePreview(selectedFile);
+                  setFieldValue("file", selectedFile.file); // Use the correct file reference
+                  setPreview(selectedFile.cdnUrl); // Set preview URL
                 }
               }}
+              pubkey="abe080c3e4c6de65e1a6" // Replace with your actual Uploadcare public key
             />
-            <ErrorMessage
-              name="file"
-              component="div"
-              className="text-red-500"
-            />
+            <ErrorMessage name="file" component="div" className="text-red-500" />
 
             {isLoading ? (
               <div className="mt-4 flex flex-col items-center">
-                <p className="text-gray-500 mt-2">Uploading please wait...</p>
+                <p className="text-gray-500 mt-2">Uploading, please wait...</p>
               </div>
             ) : (
               preview && (
@@ -169,3 +180,52 @@ const FileUpload: React.FC = () => {
 };
 
 export default FileUpload;
+
+
+
+// <input
+//               type="file"
+//               accept="application/pdf"
+//               className=" px-4 h-10 cursor-pointer border border-gray-300 shadow-sm mr-4 transition-colors duration-200"
+//               onChange={(e) => {
+//                 const selectedFile = e.currentTarget.files?.[0];
+//                 if (selectedFile) {
+//                   setFieldValue("file", selectedFile); // Set as an array
+//                   handleFilePreview(selectedFile);
+//                 }
+//               }}
+//             />
+//             <ErrorMessage
+//               name="file"
+//               component="div"
+//               className="text-red-500"
+//             />
+
+//             {isLoading ? (
+//               <div className="mt-4 flex flex-col items-center">
+//                 <p className="text-gray-500 mt-2">Uploading please wait...</p>
+//               </div>
+//             ) : (
+//               preview && (
+//                 <div className="mt-4">
+//                   <embed
+//                     src={preview}
+//                     type="application/pdf"
+//                     width="500px"
+//                     height="600px"
+//                   />
+//                 </div>
+//               )
+//             )}
+
+//             <button
+//               type="submit"
+//               className={`mt-4 px-4 py-3 rounded ${
+//                 !isSubmitting && preview
+//                   ? "bg-blue-600 text-white hover:bg-blue-700"
+//                   : " bg-gray-400 text-gray-200 cursor-not-allowed "
+//               }`}
+//               disabled={isSubmitting || !preview}
+//             >
+//               Upload
+//             </button>
