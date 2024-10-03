@@ -1,7 +1,7 @@
 {
   "name": "doc-man",
   "version": "0.1.0",
-  "type":"module",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,18 +10,23 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@uploadcare/file-uploader": "^1.8.0",
+    "@uploadcare/react-uploader": "^1.1.0",
+    "@uploadcare/rest-client": "^6.14.1",
+    "@vercel/postgres": "^0.10.0",
     "convex-dev": "^0.1.5",
     "dotenv": "^16.4.5",
     "formidable": "^3.5.1",
     "formik": "^2.4.6",
     "multer": "^1.4.5-lts.1",
-    "next": "14.2.13",
+    "next": "^14.2.13",
     "pg": "^8.13.0",
     "react": "^18",
     "react-dom": "^18",
     "reflect-metadata": "^0.2.2",
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.20",
+    "uploadcare-widget": "^3.21.7",
     "yup": "^1.4.0"
   },
   "devDependencies": {
