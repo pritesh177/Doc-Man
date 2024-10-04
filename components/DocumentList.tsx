@@ -76,11 +76,13 @@ import {
   listOfFiles,
   UploadcareSimpleAuthSchema,
 } from '@uploadcare/rest-client';
+import { usePathname } from "next/navigation";
 
 interface Document {
   id: string;
   name: string;
   url: string;
+  //datetime_uploaded:string;
 }
 
 // interface UploadcareFile {
@@ -102,8 +104,9 @@ const uploadcareSimpleAuthSchema = new UploadcareSimpleAuthSchema({
 
 const DocumentList: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  //const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  //const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const pathname=usePathname();
 
   useEffect(() => {
     const fetchDocs = async () => {
@@ -123,7 +126,7 @@ const DocumentList: React.FC = () => {
        const filesData:Document[] = res.results.map((file: FileInfo) => ({
         id: file.uuid,
         name: file.originalFilename,
-        url: `https://ucarecdn.com/${file.uuid}/`,  // Use the CDN URL for the file
+        url: `https://ucarecdn.com/${file.uuid}/`, // Use the CDN URL for the file
       }));
 
       setDocuments(filesData); // Set the list of files in state
@@ -140,6 +143,45 @@ const DocumentList: React.FC = () => {
     // };
     fetchDocs();
   }, []);
+
+  // useEffect(() => {
+  //   const fetchDocs = async () => {
+  //     try {
+  //       const response = await fetch('https://api.uploadcare.com/files/', {
+  //         method: 'GET',
+  //         headers: {
+  //           Authorization: 'Uploadcare.Simple YOUR_PUBLIC_KEY:YOUR_SECRET_KEY', // Replace with your keys
+  //         },
+  //       });
+
+  //       if (!response.ok) {
+  //         console.error('Failed to fetch documents:', response.statusText);
+  //         return;
+  //       }
+
+  //       const data = await response.json();
+        
+  //       // Map the results to your document structure
+  //       const docs: Document[] = data.results.map((file: any) => ({
+  //         id: file.uuid,
+  //         name: file.original_filename,
+  //         url: `https://ucarecdn.com/${file.uuid}/`,
+  //         datetime_uploaded: file.datetime_uploaded, // Timestamp of when the file was uploaded
+  //       }));
+
+  //       // Sort by `datetime_uploaded` in descending order (newest first)
+  //       const sortedDocs = docs.sort((a, b) => 
+  //         new Date(b.datetime_uploaded).getTime() - new Date(a.datetime_uploaded).getTime()
+  //       );
+
+  //       setDocuments(sortedDocs);
+  //     } catch (error) {
+  //       console.error('Error fetching documents:', error);
+  //     }
+  //   };
+
+  //   fetchDocs();
+  // }, []);
 
   // const handleDelete =async (id : string)=>{
   //   const res=await fetch(`/api/uploads/${id}`,{method:'DELETE'});
@@ -158,15 +200,34 @@ const DocumentList: React.FC = () => {
     // console.log("Preview URL:", previewUrl); 
     // setPreviewUrl(previewUrl);
     // setIsPreviewOpen(true);
-    setPreviewUrl(url);
-    setIsPreviewOpen(true);
+    //setPreviewUrl(url);
+    //setIsPreviewOpen(true);
+    window.open(url,'_blank');
   };
+
+  const handleDelete=async(id:string)=>{
+    try{
+      const response=await fetch(`/api/documents/${id}`,{
+        method:'DELETE',
+      });
+      if(!response.ok){
+        console.log("Failed to Fetch Docs:",response.statusText)
+        return;;
+      }
+
+      setDocuments((prevDocs)=>prevDocs.filter((doc)=>doc.id!==id));
+      console.log("File Deleted Successfully");
+    }
+    catch (error) {
+      console.error("Error deleting file:", error);
+    }
+  }
   
 
-  const closePreview = () => {
-    setPreviewUrl(null);
-    setIsPreviewOpen(false);
-  };
+  // const closePreview = () => {
+  //   setPreviewUrl(null);
+  //   setIsPreviewOpen(false);
+  // };
 
   
 
@@ -183,10 +244,69 @@ const DocumentList: React.FC = () => {
             Upload File
           </button>
         </Link>
+        <Link href="">
+        <button
+  className={`px-4 py-3 rounded text-white ${pathname === '/documents' ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+  disabled={pathname === '/documents'}
+>
+  View Docs
+</button>
+        </Link>
       </div>
       <h2 className="text-2xl text-gray-500 font-semibold mb-4 mt-10 ml-4">List of Docs</h2>
       <ul className="mt-11 space-y-3">
-        {/* {documents.map((doc) => {
+       
+{documents.map((doc) => (
+          <li key={doc.id} className="flex items-center justify-between p-3 bg-black rounded-lg shadow-lg hover:shadow-2xl transition duration-200">
+            <span className="flex-1 text-white font-medium">
+              <a href={doc.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                {doc.name}
+              </a>
+            </span>
+            <button
+              onClick={() => handlePreview(doc.url)}
+              className="ml-4 px-2 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300"
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => handleDelete(doc.id)}
+              className="ml-4 px-2 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-300"
+            >
+              Delete
+            </button>        
+          </li>
+           ))}
+      </ul>
+
+      {/* {isPreviewOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-4 rounded shadow-lg max-w-4xl w-full">
+            <button
+              className="absolute top-2 right-2 text-red-500"
+              onClick={closePreview}
+            >
+              Close
+            </button>
+            {previewUrl && (
+              <iframe
+                src={previewUrl}
+                className="w-full h-96"
+                title="Document Preview"
+              />
+            )}
+          </div>
+        </div>
+      )} */}
+    </React.Fragment>
+  );
+};
+
+export default DocumentList;
+
+
+// Extra Code
+ {/* {documents.map((doc) => {
             const docName = doc.name.replace(/^\d+-/, "");
             return(
           <li key={doc.id} className="flex items-center justify-between p-3 bg-black rounded-lg shadow-lg glow hover:shadow-2x1 transition duration-200">
@@ -211,44 +331,3 @@ const DocumentList: React.FC = () => {
             
         )
 })} */}
-{documents.map((doc) => (
-          <li key={doc.id} className="flex items-center justify-between p-3 bg-black rounded-lg shadow-lg hover:shadow-2xl transition duration-200">
-            <span className="flex-1 text-white font-medium">
-              <a href={doc.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                {doc.name}
-              </a>
-            </span>
-            <button
-              onClick={() => handlePreview(doc.url)}
-              className="ml-4 px-2 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300"
-            >
-              Preview
-            </button>
-          </li>
-           ))}
-      </ul>
-
-      {isPreviewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-4 rounded shadow-lg max-w-4xl w-full">
-            <button
-              className="absolute top-2 right-2 text-red-500"
-              onClick={closePreview}
-            >
-              Close
-            </button>
-            {previewUrl && (
-              <iframe
-                src={previewUrl}
-                className="w-full h-96"
-                title="Document Preview"
-              />
-            )}
-          </div>
-        </div>
-      )}
-    </React.Fragment>
-  );
-};
-
-export default DocumentList;
