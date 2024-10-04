@@ -14,7 +14,7 @@ pnpm dev
 bun dev
 ```
 
-Open [Doc-Man](https://docman-git-main-pritesh177s-projects.vercel.app/) with your browser to see the result.
+Open [Doc-Man]((https://docman-pink.vercel.app/)) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
