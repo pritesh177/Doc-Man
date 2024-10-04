@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Formik, Form, ErrorMessage } from "formik";
 import * as yup from "yup";
 //  Uploadcare External API
@@ -15,6 +15,7 @@ const FileUpload: React.FC = () => {
   const [preview, setPreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
+  const pathname=usePathname();
 
   // Validation schema
   const validate = yup.object().shape({
@@ -117,6 +118,14 @@ const FileUpload: React.FC = () => {
           <button className="px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
             Home
           </button>
+        </Link>
+        <Link href="">
+        <button
+  className={`px-4 py-3 rounded text-white ${pathname === '/uploader' ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+  disabled={pathname === '/uploader'}
+>
+  Upload File
+</button>
         </Link>
         <Link href="/documents">
           <button className="px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
