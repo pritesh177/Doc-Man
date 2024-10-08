@@ -14,19 +14,19 @@ export default function Home() {
       <div className="absolute top-4 right-4 space-x-4">
       <Link href="">
         <button
-  className={`px-4 py-3 rounded text-white ${pathname === '/' ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+  className={`px-4 py-3 rounded text-white ${pathname === '/' ? 'bg-blue-600 cursor-not-allowed' : 'bg-gray-600 hover:bg-blue-700'}`}
   disabled={pathname === '/'}
 >
   Home
 </button>
         </Link>
         <Link href="/uploader">
-              <button className="px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
+              <button className="px-4 py-3 bg-gray-600 text-white rounded hover:bg-blue-700">
                 Upload File
               </button>
         </Link>
         <Link href="/documents">
-              <button className="px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
+              <button className="px-4 py-3 bg-gray-600 text-white rounded hover:bg-blue-700">
                 View Docs
               </button>
         </Link>
